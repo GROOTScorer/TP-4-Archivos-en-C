@@ -12,6 +12,7 @@ typedef struct {
 
 Persona personas[MAX_REGISTROS];
 int num_registros = 0;
+int num_registros_cambios = 0;
 
 void guardar_datos() {
     FILE *archivo = fopen("cambios.txt", "w");
@@ -20,7 +21,7 @@ void guardar_datos() {
         return;
     }
 
-    for (int i = 0; i < num_registros; i++) {
+    for (int i = 0; i < num_registros_cambios; i++) {
         fprintf(archivo, "%s,%s,%d\n", personas[i].nombre, personas[i].apellido, personas[i].dni);
     }
 
@@ -50,22 +51,45 @@ void cargar_datos() {
     printf("Datos cargados desde el archivo datos.txt\n");
 }
 
+void cargar_cambios() {
+    num_registros_cambios = 0;
+    char linea_cambio[100];
+    FILE *archivo = fopen("cambios.txt", "r");
+    if (archivo == NULL) {
+        printf("No se encontró el archivo cambios.txt\n");
+        return;
+    }
+
+    while (fgets(linea_cambio, sizeof(linea_cambio), archivo)) {
+        char *token = strtok(linea_cambio, ",");
+        strcpy(personas[num_registros_cambios].nombre, token);
+        token = strtok(NULL, ",");
+        strcpy(personas[num_registros_cambios].apellido, token);
+        personas[num_registros_cambios].dni = atoi(strtok(NULL, ","));
+        num_registros_cambios++;
+    }
+
+    fclose(archivo);
+
+    printf("Datos cargados desde el archivo cambios.txt\n");
+}
+
 void agregar_persona() {
-    if (num_registros >= MAX_REGISTROS) {
+    if (num_registros_cambios >= MAX_REGISTROS) {
         printf("No se pueden agregar más registros.\n");
         return;
     }
 
     printf("Ingrese el nombre: ");
-    scanf("%s", personas[num_registros].nombre);
+    scanf("%s", personas[num_registros_cambios].nombre);
     printf("Ingrese el apellido: ");
-    scanf("%s", personas[num_registros].apellido);
+    scanf("%s", personas[num_registros_cambios].apellido);
     printf("Ingrese el DNI: ");
-    scanf("%d", &personas[num_registros].dni);
+    scanf("%d", &personas[num_registros_cambios].dni);
 
     int existe = 0;
-    for (int i = 0; i < num_registros; i++) {
-        if (personas[i].dni == personas[num_registros].dni) {
+    for (int i = 0; i < num_registros_cambios; i++) {
+        if (personas[i].dni == personas[num_registros_cambios].dni) {
             printf("Ya existe un registro con ese DNI.\n");
             existe = 1;
             break;
@@ -73,7 +97,7 @@ void agregar_persona() {
     }
 
     if (!existe) {
-        num_registros++;
+        num_registros_cambios++;
         printf("Persona agregada correctamente.\n");
     }
 }
@@ -183,6 +207,7 @@ void guardar_datos_ordenados() {
 
 int main() {
     cargar_datos();
+    cargar_cambios();
 
     int opcion;
     do {
